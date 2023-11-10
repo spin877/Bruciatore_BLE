@@ -25,7 +25,7 @@ The VEVOR diesel air heater is designed for use in cars, campers, trucks, and RV
 
 ## Supported Commands
 
-- `cmd1`: Turns on the heater.
+- `cmd10`: Turns on the heater.
 - `cmd8`: Turns off the heater.
 - Other commands: Adjust power, temperature, and other heater features.
 

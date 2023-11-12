@@ -37,8 +37,7 @@ class Bruciatore_BLE:
         return self.byte_sequence[6]
 
     def dump(self):
-
-        if len(self.byte_sequence)> 21:                                                  
+                                                                                                   
                 print(f"Accensione: {'Acceso' if self.get_accensione() else 'Spento'}")
                 print(f"Potenza: {self.get_potenza()}")
                 print(f"Temperatura: {self.get_temperatura()}°C")
@@ -49,8 +48,4 @@ class Bruciatore_BLE:
                 print(f"Volt Batteria: {self.get_Volt_battery()} Volt")
                 print(f"Decimal representation: {[x for x in self.byte_sequence]}")
                 print(f"Altitudine: {self.get_Altitudine()}")
-                print(f"\r\ni comandi supportati sono cmd1-10\r\n")
-                print()
-        else:
-            print("il Bruciatore è spento")            
-
+                print(f"i comandi supportati sono cmd1-19\r\n")

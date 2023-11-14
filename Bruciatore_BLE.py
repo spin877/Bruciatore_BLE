@@ -16,7 +16,8 @@ class Bruciatore_BLE:
             return 'Spegnimento'
         
     def get_potenza(self):
-        return self.byte_sequence[10] +1
+        #return self.byte_sequence[10] +1
+        return self.byte_sequence[9]
 
     def get_temperatura(self):
         return self.byte_sequence[15] 
@@ -27,8 +28,8 @@ class Bruciatore_BLE:
     def get_temperatura_bruciatore(self):
         return self.byte_sequence[19] # 
 
-    def get_temperatura_target(self):
-        return self.byte_sequence[9] # non è una temperatura sembra seguire la potenza
+    def get_velocita_ventola(self):
+        return self.byte_sequence[10] + 1
     
     def get_Volt_battery(self):    
         return self.byte_sequence[11] / 10.0
@@ -42,8 +43,8 @@ class Bruciatore_BLE:
                 print(f"Potenza: {self.get_potenza()}")
                 print(f"Temperatura: {self.get_temperatura()}°C")
                 print(f"Temperatura interna Bruciatore: {self.get_temperatura_bruciatore()}°C")
-                print(f"Temperatura Uscita Bruciatore: {self.get_temperatura_uscita_bruciatore()}°C")
-                print(f"Temperatura Target: {self.get_temperatura_target()}°C")
+                print(f"Temperatura Uscita Bruciatore: {self.get_temperatura_uscita_bruciatore()}°C")                
+                print(f"Velocità ventola", self.get_velocita_ventola())
                 print(f"Candeletta Modalita: {self.get_accensione_candelette()}")
                 print(f"Volt Batteria: {self.get_Volt_battery()} Volt")
                 print(f"Decimal representation: {[x for x in self.byte_sequence]}")

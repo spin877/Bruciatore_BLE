@@ -88,9 +88,9 @@ try:
                         response = characteristic.write(cmd, withResponse=True)
 
                     else:
-                        print("Comando non valido. Inserisci un comando da 'cmd1' a 'cmd10'.")
+                        print("Comando non valido. Inserisci un comando da 'cmd1' a 'cmd19'.")
                 else:
-                    print("Comando non valido. Inserisci un comando da 'cmd1' a 'cmd10' o 'exit'.")
+                    print("Comando non valido. Inserisci un comando da 'cmd1' a 'cmd19' o 'exit'.")
         else:
             print(f"Caratteristica con UUID {characteristic_uuid} non trovata.")
     else:

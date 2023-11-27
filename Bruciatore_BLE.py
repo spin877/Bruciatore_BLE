@@ -24,8 +24,7 @@ class Bruciatore_BLE:
     def get_temperatura_uscita_bruciatore(self):
         return self.byte_sequence[13]
 
-    def get_temperatura_bruciatore(self):
-        print("bucchin\n")
+    def get_temperatura_bruciatore(self):        
         if self.byte_sequence[13] > 150 and self.byte_sequence[19] < 50:
            return self.byte_sequence[19] + 255
         else:

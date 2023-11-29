@@ -9,9 +9,9 @@ class Bruciatore_BLE:
         if self.byte_sequence[5] == 0:
             return 'Spenta'
         if self.byte_sequence[5] == 2:
-            return 'Accesa'
+            return 'Iniezione'
         if self.byte_sequence[5] == 3:
-            return 'Stambay mode'
+            return 'Riscaldamento'
         if self.byte_sequence[5] == 4:
             return 'Spegnimento'
 

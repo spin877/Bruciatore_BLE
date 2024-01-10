@@ -36,3 +36,4 @@ For more details about the VEVOR Diesel Air Heater, visit the [VEVOR product pag
 ## Important Note
 
 This project is created for educational purposes and automation of the VEVOR diesel air heater. Use the software at your own risk. The author is not responsible for any damage resulting from the improper use of the code.
+For a more comprehensive understanding of the utilized protocol, refer to the detailed explanation available at [this link](https://github.com/iotmaestro/vevor-heater-ble).

@@ -65,46 +65,46 @@ ble_client:
 sensor:   
     
   - platform: template
-    name: "Volt Batteria"
+    name: "Battery Voltage"
     id: V_Batt
     unit_of_measurement: V
     accuracy_decimals: 2
     device_class: voltage
 
   - platform: template
-    name: "Livello Del mare"
+    name: "Sea Level"
     unit_of_measurement: 'm'
     id: altitude
     device_class: distance      
     accuracy_decimals: 0
 
   - platform: template
-    name: "Stato Bruciatore"
+    name: ""Burner Status"
     id: stato_Bruciatore
     accuracy_decimals: 0
 
   - platform: template
-    name: "Stato Candeletta"
+    name: "Glow Plug Status"
     id: stato_Candeletta
     accuracy_decimals: 0
 
   - platform: template
-    name: "Stato Potenza"
+    name: "Power Status"
     id: stato_Potenza
     accuracy_decimals: 0
 
   - platform: template
-    name: "Temperatura Uscita Bruciatore"
+    name: "Burner Outlet Temperature"
     id: Temp_OUT_Bruciatore    
     unit_of_measurement: "°C"
 
   - platform: template
-    name: "Temperatura Bruciatore"
+    name: "Core Burner Temperature"
     id: Temp_IN_Bruciatore
     unit_of_measurement: "°C"
 
   - platform: template
-    name: "Velocita Ventola"
+    name: "Fan Speed"
     id: fan_speed
     accuracy_decimals: 0    
 

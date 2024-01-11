@@ -178,7 +178,7 @@ switch:
       - switch.turn_off: Velocita1
 
   - platform: template
-    name: "Set Speed 2"
+    name: "Set Speed 3"
     turn_on_action:
 
       - ble_client.ble_write:
@@ -186,11 +186,11 @@ switch:
           service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
           characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
           # List of bytes to write.
-          value: [0xaa, 0x55, 0x0c, 0x22, 0x04, 0x02, 0x00, 0x34] #2
+          value: [0xaa, 0x55, 0x0c, 0x22, 0x04, 0x03, 0x00, 0x35] #3
       - delay: 3s 
 
   - platform: template
-    name: "Set Speed 3"
+    name: "Set Speed 6"
     turn_on_action:
     
       - ble_client.ble_write:
@@ -198,7 +198,7 @@ switch:
           service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
           characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
           # List of bytes to write.
-          value: [0xaa, 0x55, 0x0c, 0x22, 0x04, 0x03, 0x00, 0x35] #3
+          value: [0xaa, 0x55, 0x0c, 0x22, 0x04, 0x06, 0x00, 0x38] #6
       - delay: 3s
 
 # for all Power

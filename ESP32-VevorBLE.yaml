@@ -214,7 +214,7 @@ switch:
 #                                           # change this byte
 #                                               #  |
 #                                               #  v
-#          value: [0xaa, 0x55, 0x0c, 0x22, 0x04, 0x0x, 0x00, 0x35] #x 1 to 9
+#          value: [0xaa, 0x55, 0x0c, 0x22, 0x04, 0x0x, 0x00, 0x35] #x 1 to 9 look in Vevor_AirHeater_BLE.py cmdxx command
 #      - delay: 3s
         
   - platform: template

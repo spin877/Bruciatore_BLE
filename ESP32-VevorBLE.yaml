@@ -1,0 +1,256 @@
+esphome:
+  name: bruciatore_vevor_esp32
+  friendly_name: Bruciatore_Vevor
+#  platformio_options:
+#    board_build.f_cpu: 120000000L
+#    board_build.f_cpu: 240000000L
+
+
+time:
+  - platform: homeassistant
+    timezone: "Europe/San_Marino"
+    id: ha_time
+    
+esp32_ble_tracker:
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "vHF/emJMoAZz3q8k4JySuSZnYEa43IujpwN9+fQkwYk="
+
+ota:
+  password: "09ec3c09b5847b5a4eeef2c15ce8fb00"
+
+# Abilita il componente Web Server
+web_server:
+  port: 80
+  version: 1
+
+wifi:
+  networks:
+    - ssid: WIFI-SSD1
+      password: "PASSWD1"  
+
+    - ssid: WIFI-SSD2
+      password: "PASSWD1"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "VevorBLE Hotspot"
+    password: "5A5kIEB2j6WC"
+
+interval:
+#  - interval: 300000ms #5minuti
+  - interval: 13s
+    id: intervallo
+    then:
+      - ble_client.ble_write:
+          id: vevor_ble
+          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
+          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
+          value: [0xaa, 0x55, 0x0c, 0x22, 0x01, 0x00, 0x00, 0x2f]
+
+ble_client:
+  - mac_address: 21:47:08:1a:b1:1e
+    id: vevor_ble
+    
+sensor:   
+    
+  - platform: template
+    name: "Volt Batteria"
+    id: V_Batt
+    unit_of_measurement: V
+    accuracy_decimals: 2
+    device_class: voltage
+
+  - platform: template
+    name: "Livello Del mare"
+    unit_of_measurement: 'm'
+    id: altitude
+    device_class: distance      
+    accuracy_decimals: 0
+
+  - platform: template
+    name: "Stato Bruciatore"
+    id: stato_Bruciatore
+    accuracy_decimals: 0
+
+  - platform: template
+    name: "Stato Candeletta"
+    id: stato_Candeletta
+    accuracy_decimals: 0
+
+  - platform: template
+    name: "Stato Potenza"
+    id: stato_Potenza
+    accuracy_decimals: 0
+
+  - platform: template
+    name: "Temperatura Uscita Bruciatore"
+    id: Temp_OUT_Bruciatore    
+    unit_of_measurement: "°C"
+
+  - platform: template
+    name: "Temperatura Bruciatore"
+    id: Temp_IN_Bruciatore
+    unit_of_measurement: "°C"
+
+  - platform: template
+    name: "Velocita Ventola"
+    id: fan_speed
+    accuracy_decimals: 0    
+
+#  - platform: ble_rssi
+#    mac_address: 21:47:08:1a:b1:1e
+#    id: rssi_id
+#    name: "VevorBLE RSSI"
+ 
+
+  - platform: ble_client
+    type: characteristic
+    id: my_ble_sensor
+    ble_client_id: vevor_ble
+    service_uuid: "0000ffe0-0000-1000-8000-00805f9b34fb"
+    characteristic_uuid: "0000ffe1-0000-1000-8000-00805f9b34fb"
+    name: "DUMP Dati Vevor"  
+    notify: true   
+    lambda: |-
+
+      if (x[0] == 170) {
+              ESP_LOGD("BLE", "Received data: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X ",
+                        x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], x[12], x[13], x[14], x[15], x[16], x[17], x[18], x[19]);
+
+              id(stato_Bruciatore).publish_state(x[3] > 0);
+              id(stato_Candeletta).publish_state(x[5]);
+              id(stato_Potenza).publish_state(x[9]);
+              id(fan_speed).publish_state(x[10]+1);
+
+              id(Temp_OUT_Bruciatore).publish_state(x[13]);
+
+              int temp_difference = x[19] - x[13];
+
+              if (temp_difference < 77){
+
+                if (x[13] > 120 && x[19] < 101) {
+                    id(Temp_IN_Bruciatore).publish_state(x[19] + 255);
+                } else 
+                     id(Temp_IN_Bruciatore).publish_state(x[19]);
+              }
+
+              id(V_Batt).publish_state(x[11]/10.0);
+              id(altitude).publish_state(x[6]);
+              return *((float*)(&x[0]));
+
+              if (intervallo->get_update_interval() >= 3000)
+              {
+                intervallo->set_update_interval(3000);
+                intervallo->call_setup();
+                }         
+
+            }
+
+        return 0.0;
+
+binary_sensor:
+
+switch:
+
+  - platform: template
+    name: "Set Speed 1"
+    id: Velocita1
+    turn_on_action:
+
+      - ble_client.ble_write:
+          id: vevor_ble
+          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
+          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
+          # List of bytes to write.
+          value: [0xaa, 0x55, 0x0c, 0x22, 0x04, 0x01, 0x00, 0x33] #1
+      - delay: 3s
+      - switch.turn_off: Velocita1
+
+  - platform: template
+    name: "Set Speed 2"
+    turn_on_action:
+
+      - ble_client.ble_write:
+          id: vevor_ble
+          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
+          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
+          # List of bytes to write.
+          value: [0xaa, 0x55, 0x0c, 0x22, 0x04, 0x02, 0x00, 0x34] #2
+      - delay: 3s 
+
+  - platform: template
+    name: "Set Speed 3"
+    turn_on_action:
+    
+      - ble_client.ble_write:
+          id: vevor_ble
+          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
+          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
+          # List of bytes to write.
+          value: [0xaa, 0x55, 0x0c, 0x22, 0x04, 0x03, 0x00, 0x35] #3
+      - delay: 3s
+
+# for all Power
+#  - platform: template
+#    name: "Set Speed x"
+#    turn_on_action:
+    
+#      - ble_client.ble_write:
+#          id: vevor_ble
+#          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
+#          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
+#          # List of bytes to write.         
+#                                           # change this byte
+#                                               #  |
+#                                               #  v
+#          value: [0xaa, 0x55, 0x0c, 0x22, 0x04, 0x0x, 0x00, 0x35] #x 1 to 9
+#      - delay: 3s
+        
+  - platform: template
+    name: "Start"
+    id: Avviamento
+    icon: mdi:fire-circle   
+    turn_on_action:
+
+      - ble_client.ble_write:
+          id: vevor_ble
+          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
+          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
+          # List of bytes to write.
+          value: [0xaa, 0x55, 0x0c, 0x22, 0x03, 0x01, 0x00, 0x32] #ON
+      
+      - lambda:  |-
+            intervallo->set_update_interval(3000);
+            intervallo->call_setup();
+      - switch.turn_off: Avviamento
+
+
+  - platform: template
+    name: "Shutdown"
+    id: Spegnimento
+    icon: mdi:fire-off
+    turn_on_action:
+    
+      - ble_client.ble_write:
+          
+          id: vevor_ble
+          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
+          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
+          # List of bytes to write.
+          value: [0xaa, 0x55, 0x0c, 0x22, 0x03, 0x00, 0x00, 0x31] #OFF
+      
+      - lambda:  |-
+            intervallo->set_update_interval(300000);
+            intervallo->call_setup();                     
+      - switch.turn_off: Spegnimento

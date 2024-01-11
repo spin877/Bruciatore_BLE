@@ -37,10 +37,10 @@ web_server:
 wifi:
   networks:
     - ssid: "WIFI-SSD1"
-      password: "PASSWD1"  
+      password: "PASSWORD1"
 
     - ssid: "WIFI-SSD2"
-      password: "PASSWD2"
+      password: "PASSWORD2"
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
@@ -79,7 +79,7 @@ sensor:
     accuracy_decimals: 0
 
   - platform: template
-    name: ""Burner Status"
+    name: "Burner Status"
     id: stato_Bruciatore
     accuracy_decimals: 0
 

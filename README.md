@@ -37,3 +37,6 @@ For more details about the VEVOR Diesel Air Heater, visit the [VEVOR product pag
 
 This project is created for educational purposes and automation of the VEVOR diesel air heater. Use the software at your own risk. The author is not responsible for any damage resulting from the improper use of the code.
 For a more comprehensive understanding of the utilized protocol, refer to the detailed explanation available at [this link](https://github.com/iotmaestro/vevor-heater-ble).
+
+## Using ESP32 Board with Home Assistant
+This is (ESP32-VevorBLE.yaml) the file to insert into an esp32 bluethoot card. to be able to use it with home assistant and on wifi

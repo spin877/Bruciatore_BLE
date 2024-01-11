@@ -5,7 +5,6 @@ esphome:
 #    board_build.f_cpu: 120000000L
 #    board_build.f_cpu: 240000000L
 
-
 time:
   - platform: homeassistant
     timezone: "Europe/San_Marino"
@@ -36,11 +35,11 @@ web_server:
 
 wifi:
   networks:
-    - ssid: WIFI-SSD1
+    - ssid: "WIFI-SSD1"
       password: "PASSWD1"  
 
-    - ssid: WIFI-SSD2
-      password: "PASSWD1"
+    - ssid: "WIFI-SSD2"
+      password: "PASSWD2"
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
@@ -59,7 +58,7 @@ interval:
           value: [0xaa, 0x55, 0x0c, 0x22, 0x01, 0x00, 0x00, 0x2f]
 
 ble_client:
-  - mac_address: 21:47:08:1a:b1:1e
+  - mac_address: 21:47:08:1a:b1:1e # change to your mac address
     id: vevor_ble
     
 sensor:   

@@ -15,6 +15,8 @@ The VEVOR diesel air heater is designed for use in cars, campers, trucks, and RV
 ## Requirements
 
 - Python 3.x
+- Arch Linux: sudo pacman -S base-devel cmake libevdev libconfig systemd-libs glib2
+- Debian/Ubuntu: sudo apt install build-essential cmake pkg-config libevdev-dev libudev-dev libconfig++-dev libglib2.0-dev
 - Bluepy Library: `pip install bluepy`
 
 ## Usage

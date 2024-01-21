@@ -29,7 +29,7 @@ cmd1  = common_bytes + bytearray([0x01, 0x00, 0x00, 0x2f])
 cmd2  = common_bytes + bytearray([0x04, 0xa0, 0x00, 0x3c])
 
 #cmd3  = common_bytes + bytearray([0x02, 0x02, 0x00, 0x32]) # lampeggia temeratura target per regolarla #36 gradi
-#cmd4  = common_bytes + bytearray([0x04, 0x24, 0x00, 0x56]) # lampeggia 8 gradicmd5
+#cmd4  = common_bytes + bytearray([0x04, 0x24, 0x00, 0x56]) # lampeggia 8 gradi
 
 cmd5  = common_bytes + bytearray([0x02, 0x01, 0x00, 0x31]) # Manual Mode Level
 cmd6  = common_bytes + bytearray([0x02, 0x02, 0x00, 0x32]) # Automatic Mode

@@ -39,8 +39,18 @@ class Bruciatore_BLE:
     def get_Altitudine(self):
         return self.byte_sequence[6]
 
+    def get_modolaita_operativa(self):
+        if self.byte_sequence[8] == 1:
+            return('Manuale')
+        else:
+            return('Automatico')
+    
+    def get_ErrorCode(self):
+        return self.byte_sequence[17]
+
     def dump(self):
                 print(f"Accensione: {'Acceso' if self.get_accensione() else 'Spento'}")
+                print(f"Modalità operativa: {self.get_modolaita_operativa()}")
                 print(f"Potenza: {self.get_potenza()}")
                 print(f"Temperatura: {self.get_temperatura()}°C")
                 print(f"Temperatura interna Bruciatore: {self.get_temperatura_bruciatore()}°C")
@@ -51,4 +61,5 @@ class Bruciatore_BLE:
                 print(f"Decimal representation: {[x for x in self.byte_sequence]}")
                 print(f"Hex representation: {[hex(x) for x in self.byte_sequence]}")
                 print(f"Altitudine: {self.get_Altitudine()}")
+                print(f"Error Code: {self.get_ErrorCode()}")
                 print(f"i comandi supportati sono cmd1-19\r\n")

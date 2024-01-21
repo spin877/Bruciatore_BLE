@@ -69,6 +69,11 @@ sensor:
     accuracy_decimals: 0
     
   - platform: template
+    name: "Codice Errore"
+    id: Error_Code
+    accuracy_decimals: 0    
+    
+  - platform: template
     name: "Battery Voltage"
     id: V_Batt
     unit_of_measurement: V
@@ -137,6 +142,7 @@ sensor:
               id(stato_Candeletta).publish_state(x[5]);
               id(stato_Potenza).publish_state(x[9]);
               id(fan_speed).publish_state(x[10]+1);
+              id(Error_Code).publish_state(x[17]);
 
               id(Temp_OUT_Bruciatore).publish_state(x[13]);
 

@@ -63,6 +63,10 @@ ble_client:
     id: vevor_ble
     
 sensor:   
+  - platform: template
+    name: "Modalita Bruciatore"
+    id: Mode_Bruciatore
+    accuracy_decimals: 0
     
   - platform: template
     name: "Battery Voltage"
@@ -129,6 +133,7 @@ sensor:
                         x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], x[12], x[13], x[14], x[15], x[16], x[17], x[18], x[19]);
 
               id(stato_Bruciatore).publish_state(x[3] > 0);
+              id(Mode_Bruciatore).publish_state(x[8]);
               id(stato_Candeletta).publish_state(x[5]);
               id(stato_Potenza).publish_state(x[9]);
               id(fan_speed).publish_state(x[10]+1);
@@ -158,10 +163,25 @@ sensor:
             }
 
         return 0.0;
-
+        
 binary_sensor:
 
 switch:
+
+  - platform: template
+    name: "Modalita Bruciatore"
+    id: Modalita
+    turn_on_action:
+    
+      - ble_client.ble_write:
+          id: vevor_ble
+          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
+          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
+          # List of bytes to write.
+          value: [0xaa, 0x55, 0x0c, 0x22, 0x02, 0x01, 0x00, 0x31] # Level
+          #value: [0xaa, 0x55, 0x0c, 0x22, 0x02, 0x02, 0x00, 0x32] # Automatic
+      - delay: 3s
+      - switch.turn_off: Modalita
 
   - platform: template
     name: "Set Speed 1"

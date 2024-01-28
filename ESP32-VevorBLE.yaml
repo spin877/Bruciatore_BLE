@@ -131,7 +131,7 @@ sensor:
     characteristic_uuid: "0000ffe1-0000-1000-8000-00805f9b34fb"
     name: "DUMP Dati Vevor"  
     notify: true   
-   lambda: |-
+    lambda: |-
 
       if (x[0] == 170) {
               ESP_LOGD("BLE", "Received data: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X ",

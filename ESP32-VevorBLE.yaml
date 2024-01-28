@@ -284,5 +284,6 @@ switch:
       
       - lambda:  |-
             intervallo->set_update_interval(300000);
-            intervallo->call_setup();                     
+            intervallo->call_setup();
+            id(fan_speed).publish_state(0);
       - switch.turn_off: Spegnimento

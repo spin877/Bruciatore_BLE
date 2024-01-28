@@ -131,6 +131,8 @@ sensor:
     characteristic_uuid: "0000ffe1-0000-1000-8000-00805f9b34fb"
     name: "DUMP Dati Vevor"  
     notify: true   
+   lambda: |-
+
       if (x[0] == 170) {
               ESP_LOGD("BLE", "Received data: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X ",
                         x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], x[12], x[13], x[14], x[15], x[16], x[17], x[18], x[19]);
@@ -139,7 +141,7 @@ sensor:
               id(Mode_Bruciatore).publish_state(x[8]);
               id(stato_Candeletta).publish_state(x[5]);
               id(stato_Potenza).publish_state(x[9]);
-              id(fan_speed).publish_state(x[10]+1);
+              
               id(Error_Code).publish_state(x[17]);
               id(Temp_OUT_Bruciatore).publish_state(x[13]);
 
@@ -159,7 +161,9 @@ sensor:
               // Aggiunta della condizione per azzerare fan_speed
               if (id(stato_Candeletta).state == 0 && id(stato_Bruciatore).state == 0) {
                 id(fan_speed).publish_state(0);
-              }
+              } 
+              else                          
+                id(fan_speed).publish_state(x[10]+1);
 
               return *((float*)(&x[0]));
 

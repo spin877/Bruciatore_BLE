@@ -173,9 +173,8 @@ sensor:
                 intervallo->call_setup();
                 }         
 
-            } else 
-              id(fan_speed).publish_state(0);
-
+            }
+            
         return 0.0;
        
 switch:

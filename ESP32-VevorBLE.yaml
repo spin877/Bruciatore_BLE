@@ -1,14 +1,20 @@
 esphome:
-  name: bruciatore_vevor_esp32
-  friendly_name: Bruciatore_Vevor
+  name: ${name}
+  name_add_mac_suffix: false
+  friendly_name: ${friendly_name}
 #  platformio_options:
 #    board_build.f_cpu: 120000000L
 #    board_build.f_cpu: 240000000L
+
+substitutions:
+  name: bt-vevor_ble
+  friendly_name: workshop_heater
 
 time:
   - platform: homeassistant
     timezone: "Europe/San_Marino"
     id: ha_time
+
     
 esp32_ble_tracker:
 
@@ -26,6 +32,7 @@ api:
     key: "vHF/emJMoAZz3q8k4JySuSZnYEa43IujpwN9+fQkwYk="
 
 ota:
+  platform: esphome
   password: "09ec3c09b5847b5a4eeef2c15ce8fb00"
 
 # Abilita il componente Web Server
@@ -35,17 +42,13 @@ web_server:
   version: 1
 
 wifi:
-  networks:
-    - ssid: "WIFI-SSD1"
-      password: "PASSWORD1"
-
-    - ssid: "WIFI-SSD2"
-      password: "PASSWORD2"
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "VevorBLE Hotspot"
-    password: "5A5kIEB2j6WC"
+    password: "12345678"
 
 interval:
 #  - interval: 300000ms #5minuti
@@ -178,6 +181,38 @@ sensor:
         return 0.0;
        
 switch:
+  - platform: template
+    name: "Heater Control"
+    id: heater_control
+    icon: mdi:fire-circle
+    lambda: |-
+      // Check the Burner Status sensor value
+      if (id(stato_Bruciatore).has_state()) {
+        return id(stato_Bruciatore).state == 1;
+      }
+      // Default to OFF if the status is unknown
+      return false;
+
+    turn_on_action:
+      - ble_client.ble_write:
+          id: vevor_ble
+          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
+          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
+          value: [0xaa, 0x55, 0x0c, 0x22, 0x03, 0x01, 0x00, 0x32] # ON command
+      - lambda: |-
+          intervallo->set_update_interval(3000);
+          intervallo->call_setup();
+
+    turn_off_action:
+      - ble_client.ble_write:
+          id: vevor_ble
+          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
+          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
+          value: [0xaa, 0x55, 0x0c, 0x22, 0x03, 0x00, 0x00, 0x31] # OFF command
+      - lambda: |-
+          intervallo->set_update_interval(300000);
+          intervallo->call_setup();
+          id(fan_speed).publish_state(0);
 
   - platform: template
     name: "Modalita Bruciatore"
@@ -286,3 +321,4 @@ switch:
             intervallo->call_setup();
             id(fan_speed).publish_state(0);
       - switch.turn_off: Spegnimento
+

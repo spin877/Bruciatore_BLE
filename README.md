@@ -27,10 +27,13 @@ The VEVOR diesel air heater is designed for use in cars, campers, trucks, and RV
 
 ## Supported Commands
 
-- `cmd10`: Turns on the heater.
-- `cmd8`: Turns off the heater.
-- Other commands: Adjust power, temperature, and other heater features.
-
+Available Commands:
+- `P0`: Turn heater OFF.
+- `P1`: Turn heater ON.
+- `T8-T36`: Set temperature (8-36°C).
+- `L1-L10`: Set power level (1-10).
+- `exit`: Exit program.
+  
 ## Product Information
 
 For more details about the VEVOR Diesel Air Heater, visit the [VEVOR product page](https://www.vevor.it/riscaldatore-aria-diesel-c_10321/vevor-riscaldatore-d-aria-diesel-all-in-one-per-auto-camper-camion-rv-12v-5kw-temperatura-regolabile-8-36-controllo-bluetooth-riscaldatore-da-parcheggio-per-auto-consumo-di-carburante-0-16-0-52l-h-p_010971160616).

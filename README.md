@@ -9,7 +9,7 @@ The VEVOR diesel air heater is designed for use in cars, campers, trucks, and RV
 ## Features
 
 - Bluetooth Low Energy connection with the VEVOR Diesel Air Heater device.
-- Sending specific commands (cmd1-19) to control various heater functionalities.
+- Sending specific commands to control various heater functionalities.
 - Monitoring and displaying information received from the heater, such as temperature, ignition status, power, and more.
 
 ## Requirements

@@ -215,10 +215,10 @@ Enter command: """
 
             char.write(command, withResponse=True)
 
-            if self.peripheral.waitForNotifications(1.0):
-                self.logger.info("Notification received")
-
+            self.peripheral.waitForNotifications(1.0)
+            
             response = char.read()
+            
             return list(response)
         except Exception as e:
             self.logger.error(f"Error sending command: {e}")

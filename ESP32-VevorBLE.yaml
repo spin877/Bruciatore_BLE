@@ -76,7 +76,7 @@ sensor:
     id: Error_Code
     accuracy_decimals: 0 
 
- - platform: template
+  - platform: template
     name: "Battery Voltage"
     id: battery_voltage
     unit_of_measurement: "V"

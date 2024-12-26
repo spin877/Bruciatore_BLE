@@ -8,8 +8,8 @@ esphome:
 
 substitutions:
   name: bt-vevor_ble
-  friendly_name: diesel_Air_Heate
-  
+  friendly_name: Diesel_Air_Heater
+
 esp32_ble_tracker:
 
 esp32:
@@ -65,18 +65,18 @@ globals:
     initial_value: '1'  # 1 for LEVEL, 2 for AUTOMATIC
 
 # Sensors for status reporting
-sensor:   
+sensor:
   - platform: template
     name: "Burner Mode"
     id: Mode_Burner
     accuracy_decimals: 0
-    
+
   - platform: template
     name: "Codice Errore"
     id: Error_Code
-    accuracy_decimals: 0    
-    
-  - platform: template
+    accuracy_decimals: 0 
+
+ - platform: template
     name: "Battery Voltage"
     id: battery_voltage
     unit_of_measurement: "V"
@@ -88,7 +88,7 @@ sensor:
     name: "Sea Level"
     unit_of_measurement: 'm'
     id: altitude
-    device_class: distance      
+    device_class: distance
     accuracy_decimals: 0
 
   - platform: template
@@ -109,7 +109,7 @@ sensor:
   - platform: template
     name: "Fan Speed"
     id: fan_speed
-    accuracy_decimals: 0   
+    accuracy_decimals: 0
 
   - platform: template
     name: "Room Temperature"
@@ -132,14 +132,14 @@ sensor:
     ble_client_id: heater_ble
     service_uuid: "0000ffe0-0000-1000-8000-00805f9b34fb"
     characteristic_uuid: "0000ffe1-0000-1000-8000-00805f9b34fb"
-    name: "DUMP Dati BLE"  
-    notify: true   
+    name: "DUMP Dati BLE"
+    notify: true
     lambda: |-
 
       if (x[0] == 170) {
               ESP_LOGD("BLE", "Received data: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X ",
                         x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], x[12], x[13], x[14], x[15], x[16], x[17], x[18], x[19]);
-              
+
               id(heating_temperature).publish_state(x[13]);
               id(Mode_Burner).publish_state(x[8]);
               id(stato_Bruciatore).publish_state(x[3] > 0);
@@ -153,26 +153,19 @@ sensor:
               // Aggiunta della condizione per azzerare fan_speed
               if (id(stato_Candeletta).state == 0 && id(stato_Bruciatore).state == 0) {
                 id(fan_speed).publish_state(0);
-              } 
-              else                          
-                id(fan_speed).publish_state(x[10]+1);
+              }
+              else
+               id(fan_speed).publish_state(x[10]+1);
 
-
-              
               if (intervallo->get_update_interval() >= 3000)
               {
                 intervallo->set_update_interval(3000);
                 intervallo->call_setup();
-              }  
-
+              }
 
             }
-        
-            
         return 0.0;
-      
-
-  
+        
 # Switches
 switch:
   - platform: template
@@ -183,7 +176,7 @@ switch:
     turn_on_action:
       - ble_client.ble_write:
           service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
-          characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'          
+          characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
           value: [0xAA, 0x55, 0x0C, 0x22, 0x03, 0x01, 0x00, 0x32] #ON
       - lambda: |-
           intervallo->set_update_interval(3000);
@@ -198,7 +191,6 @@ switch:
           intervallo->set_update_interval(300000);
           intervallo->call_setup();
           id(fan_speed).publish_state(0);
-                    
 
 # Select for mode
 select:
@@ -245,9 +237,9 @@ number:
         - ble_client.ble_write:
              service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
              characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
-             value: [0xAA, 0x55, 0x0C, 0x22, 0x02, 0x02, 0x00, 0x32]             
-        
-        - delay: 1s            
+             value: [0xAA, 0x55, 0x0C, 0x22, 0x02, 0x02, 0x00, 0x32]
+
+        - delay: 1s
 
         # Invio dinamico del secondo comando BLE
         - ble_client.ble_write:
@@ -276,7 +268,7 @@ number:
             characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
             value: [0xAA, 0x55, 0x0C, 0x22, 0x02, 0x01, 0x00, 0x31]
 
-        - delay: 1s            
+        - delay: 1s
 
         # Send Level
         - ble_client.ble_write:

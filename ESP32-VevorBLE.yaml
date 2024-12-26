@@ -8,14 +8,8 @@ esphome:
 
 substitutions:
   name: bt-vevor_ble
-  friendly_name: workshop_heater
-
-time:
-  - platform: homeassistant
-    timezone: "Europe/San_Marino"
-    id: ha_time
-
-    
+  friendly_name: diesel_Air_Heate
+  
 esp32_ble_tracker:
 
 esp32:
@@ -35,7 +29,7 @@ ota:
   platform: esphome
   password: "09ec3c09b5847b5a4eeef2c15ce8fb00"
 
-# Abilita il componente Web Server
+# Web Server
 # if you use home assistant and have frequent disconnections. disable the web_server
 web_server:
   port: 80
@@ -56,19 +50,25 @@ interval:
     id: intervallo
     then:
       - ble_client.ble_write:
-          id: vevor_ble
           service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
           characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
           value: [0xaa, 0x55, 0x0c, 0x22, 0x01, 0x00, 0x00, 0x2f]
 
 ble_client:
   - mac_address: 21:47:08:1a:b1:1e # change to your mac address
-    id: vevor_ble
-    
+    id: heater_ble
+
+# Global variables
+globals:
+  - id: current_mode
+    type: int
+    initial_value: '1'  # 1 for LEVEL, 2 for AUTOMATIC
+
+# Sensors for status reporting
 sensor:   
   - platform: template
-    name: "Modalita Bruciatore"
-    id: Mode_Bruciatore
+    name: "Burner Mode"
+    id: Mode_Burner
     accuracy_decimals: 0
     
   - platform: template
@@ -78,10 +78,11 @@ sensor:
     
   - platform: template
     name: "Battery Voltage"
-    id: V_Batt
-    unit_of_measurement: V
+    id: battery_voltage
+    unit_of_measurement: "V"
     accuracy_decimals: 2
     device_class: voltage
+    icon: "mdi:battery"
 
   - platform: template
     name: "Sea Level"
@@ -106,60 +107,48 @@ sensor:
     accuracy_decimals: 0
 
   - platform: template
-    name: "Burner Outlet Temperature"
-    id: Temp_OUT_Bruciatore    
-    unit_of_measurement: "°C"
-
-  - platform: template
-    name: "Core Burner Temperature"
-    id: Temp_IN_Bruciatore
-    unit_of_measurement: "°C"
-
-  - platform: template
     name: "Fan Speed"
     id: fan_speed
-    accuracy_decimals: 0    
+    accuracy_decimals: 0   
 
-#  - platform: ble_rssi
-#    mac_address: 21:47:08:1a:b1:1e
-#    id: rssi_id
-#    name: "VevorBLE RSSI"
- 
+  - platform: template
+    name: "Room Temperature"
+    id: room_temperature
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    icon: "mdi:thermometer"
+
+  - platform: template
+    name: "Heating Temperature"
+    id: heating_temperature
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    icon: "mdi:radiator"
+
 
   - platform: ble_client
     type: characteristic
     id: my_ble_sensor
-    ble_client_id: vevor_ble
+    ble_client_id: heater_ble
     service_uuid: "0000ffe0-0000-1000-8000-00805f9b34fb"
     characteristic_uuid: "0000ffe1-0000-1000-8000-00805f9b34fb"
-    name: "DUMP Dati Vevor"  
+    name: "DUMP Dati BLE"  
     notify: true   
     lambda: |-
 
       if (x[0] == 170) {
               ESP_LOGD("BLE", "Received data: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X ",
                         x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], x[12], x[13], x[14], x[15], x[16], x[17], x[18], x[19]);
-
+              
+              id(heating_temperature).publish_state(x[13]);
+              id(Mode_Burner).publish_state(x[8]);
               id(stato_Bruciatore).publish_state(x[3] > 0);
-              id(Mode_Bruciatore).publish_state(x[8]);
               id(stato_Candeletta).publish_state(x[5]);
               id(stato_Potenza).publish_state(x[9]);
-              
               id(Error_Code).publish_state(x[17]);
-              id(Temp_OUT_Bruciatore).publish_state(x[13]);
-
-              int temp_difference = x[19] - x[13];
-
-              if (temp_difference < 77){
-
-                if (x[13] > 120 && x[19] < 101) {
-                    id(Temp_IN_Bruciatore).publish_state(x[19] + 255);
-                } else 
-                     id(Temp_IN_Bruciatore).publish_state(x[19]);
-              }
-
-              id(V_Batt).publish_state(x[11]/10.0);
               id(altitude).publish_state(x[6]);
+              id(room_temperature).publish_state(x[15]);
+              id(battery_voltage).publish_state(x[11]/10.0);
 
               // Aggiunta della condizione per azzerare fan_speed
               if (id(stato_Candeletta).state == 0 && id(stato_Bruciatore).state == 0) {
@@ -168,157 +157,134 @@ sensor:
               else                          
                 id(fan_speed).publish_state(x[10]+1);
 
-              return *((float*)(&x[0]));
 
+              
               if (intervallo->get_update_interval() >= 3000)
               {
                 intervallo->set_update_interval(3000);
                 intervallo->call_setup();
-                }         
+              }  
+
 
             }
+        
             
         return 0.0;
-       
+      
+
+  
+# Switches
 switch:
   - platform: template
-    name: "Heater Control"
-    id: heater_control
-    icon: mdi:fire-circle
-    lambda: |-
-      // Check the Burner Status sensor value
-      if (id(stato_Bruciatore).has_state()) {
-        return id(stato_Bruciatore).state == 1;
-      }
-      // Default to OFF if the status is unknown
-      return false;
-
+    name: "Heater Power"
+    id: heater_power
+    icon: "mdi:radiator"
+    optimistic: true
     turn_on_action:
       - ble_client.ble_write:
-          id: vevor_ble
-          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
-          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
-          value: [0xaa, 0x55, 0x0c, 0x22, 0x03, 0x01, 0x00, 0x32] # ON command
+          service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
+          characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'          
+          value: [0xAA, 0x55, 0x0C, 0x22, 0x03, 0x01, 0x00, 0x32] #ON
       - lambda: |-
           intervallo->set_update_interval(3000);
           intervallo->call_setup();
 
     turn_off_action:
       - ble_client.ble_write:
-          id: vevor_ble
-          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
-          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
-          value: [0xaa, 0x55, 0x0c, 0x22, 0x03, 0x00, 0x00, 0x31] # OFF command
+          service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
+          characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
+          value: [0xAA, 0x55, 0x0C, 0x22, 0x03, 0x00, 0x00, 0x31] #OFF
       - lambda: |-
           intervallo->set_update_interval(300000);
           intervallo->call_setup();
           id(fan_speed).publish_state(0);
+                    
 
+# Select for mode
+select:
   - platform: template
-    name: "Modalita Bruciatore"
-    id: Modalita
-    turn_on_action:
-    
-      - ble_client.ble_write:
-          id: vevor_ble
-          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
-          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
-          # List of bytes to write.
-          value: [0xaa, 0x55, 0x0c, 0x22, 0x02, 0x01, 0x00, 0x31] # Level
-          #value: [0xaa, 0x55, 0x0c, 0x22, 0x02, 0x02, 0x00, 0x32] # Automatic
-      - delay: 3s
-      - switch.turn_off: Modalita
+    name: "Heater Mode"
+    id: heater_mode
+    options:
+      - "Level"
+      - "Automatic"
+    initial_option: "Level"
+    optimistic: true
+    on_value:
+      then:
+        - if:
+            condition:
+              lambda: 'return id(heater_mode).state == "Level";'
+            then:
+              - lambda: 'id(current_mode) = 1;'
+              - ble_client.ble_write:
+                  service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
+                  characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
+                  value: [0xAA, 0x55, 0x0C, 0x22, 0x02, 0x01, 0x00, 0x31]
+            else:
+              - lambda: 'id(current_mode) = 2;'
+              - ble_client.ble_write:
+                  service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
+                  characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
+                  value: [0xAA, 0x55, 0x0C, 0x22, 0x02, 0x02, 0x00, 0x32]
 
+
+number:
   - platform: template
-    name: "Set Speed 1"
-    id: Velocita1
-    turn_on_action:
+    name: "Heater Temperature"
+    id: heater_temperature
+    min_value: 8
+    max_value: 36
+    step: 1
+    unit_of_measurement: "°C"
+    icon: "mdi:thermometer"
+    optimistic: true
+    set_action:
+      then:
 
-      - ble_client.ble_write:
-          id: vevor_ble
-          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
-          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
-          # List of bytes to write.
-          value: [0xaa, 0x55, 0x0c, 0x22, 0x04, 0x01, 0x00, 0x33] #1
-      - delay: 3s
-      - switch.turn_off: Velocita1
-
-  - platform: template
-    name: "Set Speed 3"
-    turn_on_action:
-
-      - ble_client.ble_write:
-          id: vevor_ble
-          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
-          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
-          # List of bytes to write.
-          value: [0xaa, 0x55, 0x0c, 0x22, 0x04, 0x03, 0x00, 0x35] #3
-      - delay: 3s 
-
-  - platform: template
-    name: "Set Speed 6"
-    turn_on_action:
-    
-      - ble_client.ble_write:
-          id: vevor_ble
-          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
-          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
-          # List of bytes to write.
-          value: [0xaa, 0x55, 0x0c, 0x22, 0x04, 0x06, 0x00, 0x38] #6
-      - delay: 3s
-
-# for all Power
-#  - platform: template
-#    name: "Set Speed x"
-#    turn_on_action:
-    
-#      - ble_client.ble_write:
-#          id: vevor_ble
-#          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
-#          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
-#          # List of bytes to write.         
-#                                           # change this byte
-#                                               #  |
-#                                               #  v
-#          value: [0xaa, 0x55, 0x0c, 0x22, 0x04, 0x0x, 0x00, 0x35] #x 1 to 9 look in Vevor_AirHeater_BLE.py cmdxx command
-#      - delay: 3s
+        - ble_client.ble_write:
+             service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
+             characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
+             value: [0xAA, 0x55, 0x0C, 0x22, 0x02, 0x02, 0x00, 0x32]             
         
-  - platform: template
-    name: "Start"
-    id: Avviamento
-    icon: mdi:fire-circle   
-    turn_on_action:
+        - delay: 1s            
 
-      - ble_client.ble_write:
-          id: vevor_ble
-          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
-          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
-          # List of bytes to write.
-          value: [0xaa, 0x55, 0x0c, 0x22, 0x03, 0x01, 0x00, 0x32] #ON
-      
-      - lambda:  |-
-            intervallo->set_update_interval(3000);
-            intervallo->call_setup();
-      - switch.turn_off: Avviamento
+        # Invio dinamico del secondo comando BLE
+        - ble_client.ble_write:
+            service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
+            characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
+            value: !lambda |-
+              uint8_t temp = (uint8_t)id(heater_temperature).state;  // Set Temp
+              uint8_t checksum = (0xAA + 0x55 + 0x0C + 0x22 + 0x04 + temp + 0x00) +1 % 256 ; // Calc checksum
+              return {0xAA, 0x55, 0x0C, 0x22, 0x04, temp, 0x00, checksum};
 
 
   - platform: template
-    name: "Shutdown"
-    id: Spegnimento
-    icon: mdi:fire-off
-    turn_on_action:
-    
-      - ble_client.ble_write:
-          
-          id: vevor_ble
-          service_uuid: 0000ffe0-0000-1000-8000-00805f9b34fb
-          characteristic_uuid: 0000ffe1-0000-1000-8000-00805f9b34fb
-          # List of bytes to write.
-          value: [0xaa, 0x55, 0x0c, 0x22, 0x03, 0x00, 0x00, 0x31] #OFF
-      
-      - lambda:  |-
-            intervallo->set_update_interval(300000);
-            intervallo->call_setup();
-            id(fan_speed).publish_state(0);
-      - switch.turn_off: Spegnimento
+    name: "Heater LEVEL"
+    id: heater_level
+    min_value: 0
+    max_value: 10
+    step: 1
+    unit_of_measurement: "Level"
+    icon: "mdi:format-list-numbered"
+    optimistic: true
+    set_action:
+      then:
+        # Set Level mode
+        - ble_client.ble_write:
+            service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
+            characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
+            value: [0xAA, 0x55, 0x0C, 0x22, 0x02, 0x01, 0x00, 0x31]
+
+        - delay: 1s            
+
+        # Send Level
+        - ble_client.ble_write:
+            service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
+            characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
+            value: !lambda |-
+              uint8_t level = (uint8_t)id(heater_level).state;  // Set Level
+              uint8_t checksum = (0xAA + 0x55 + 0x0C + 0x22 + 0x04 + level + 0x00) +1 % 256 ; // Calc checksum
+              return {0xAA, 0x55, 0x0C, 0x22, 0x04, level, 0x00, checksum};
+
 

@@ -100,16 +100,19 @@ sensor:
     name: "Glow Plug Status"
     id: stato_Candeletta
     accuracy_decimals: 0
+    icon: "mdi:induction"
 
   - platform: template
     name: "Power Status"
     id: stato_Potenza
     accuracy_decimals: 0
+    icon: "mdi:fire-circle"
 
   - platform: template
     name: "Fan Speed"
     id: fan_speed
     accuracy_decimals: 0
+    icon: "mdi:fan"
 
   - platform: template
     name: "Room Temperature"

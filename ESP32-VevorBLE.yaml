@@ -120,7 +120,7 @@ sensor:
     id: room_temperature
     unit_of_measurement: "°C"
     accuracy_decimals: 1
-    icon: "mdi:thermometer"
+    icon: "mdi:home-thermometer"
 
   - platform: template
     name: "Heating Temperature"

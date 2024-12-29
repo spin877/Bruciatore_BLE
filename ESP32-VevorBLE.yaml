@@ -82,7 +82,7 @@ sensor:
     unit_of_measurement: "V"
     accuracy_decimals: 2
     device_class: voltage
-    icon: "mdi:battery"
+    icon: "mdi:car-battery"
 
   - platform: template
     name: "Sea Level"
@@ -90,6 +90,7 @@ sensor:
     id: altitude
     device_class: distance
     accuracy_decimals: 0
+    icon: "mdi:summit"
 
   - platform: template
     name: "Burner Status"
@@ -106,7 +107,7 @@ sensor:
     name: "Power Status"
     id: stato_Potenza
     accuracy_decimals: 0
-    icon: "mdi:fire-circle"
+    icon: "mdi:speedometer"
 
   - platform: template
     name: "Fan Speed"

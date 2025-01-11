@@ -45,8 +45,7 @@ wifi:
     password: "12345678"
 
 interval:
-#  - interval: 300000ms #5minuti
-  - interval: 13s
+  - interval: 15s
     id: intervallo
     then:
       - ble_client.ble_write:
@@ -160,13 +159,6 @@ sensor:
               }
               else
                id(fan_speed).publish_state(x[10]+1);
-
-              if (intervallo->get_update_interval() >= 3000)
-              {
-                intervallo->set_update_interval(3000);
-                intervallo->call_setup();
-              }
-
             }
         return 0.0;
         
@@ -182,9 +174,6 @@ switch:
           service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
           characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
           value: [0xAA, 0x55, 0x0C, 0x22, 0x03, 0x01, 0x00, 0x32] #ON
-      - lambda: |-
-          intervallo->set_update_interval(3000);
-          intervallo->call_setup();
 
     turn_off_action:
       - ble_client.ble_write:
@@ -192,8 +181,6 @@ switch:
           characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
           value: [0xAA, 0x55, 0x0C, 0x22, 0x03, 0x00, 0x00, 0x31] #OFF
       - lambda: |-
-          intervallo->set_update_interval(300000);
-          intervallo->call_setup();
           id(fan_speed).publish_state(0);
 
 # Select for mode

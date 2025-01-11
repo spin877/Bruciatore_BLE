@@ -182,6 +182,9 @@ switch:
           value: [0xAA, 0x55, 0x0C, 0x22, 0x03, 0x00, 0x00, 0x31] #OFF
       - lambda: |-
           id(fan_speed).publish_state(0);
+    
+    lambda: |-
+      return id(stato_Bruciatore).state;
 
 # Select for mode
 select:

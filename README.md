@@ -45,3 +45,8 @@ For a more comprehensive understanding of the utilized protocol, refer to the de
 
 ## Using ESP32 Board with Home Assistant
 This is (ESP32-VevorBLE.yaml) the file to insert into an [esp32](https://upload.wikimedia.org/wikipedia/commons/3/33/Espressif_ESP-WROOM-32_Wi-Fi_%26_Bluetooth_Module.jpg) bluethoot card. to be able to use it with home assistant and on wifi
+
+## Thanks
+
+Thanks to:
+- [jsnyder](https://github.com/jsnyder)

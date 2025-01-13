@@ -63,15 +63,27 @@ globals:
     type: int
     initial_value: '1'  # 1 for LEVEL, 2 for AUTOMATIC
 
+text_sensor:
+  - platform: template
+    name: "Glow Plug Status"
+    id: stato_Candeletta
+    icon: "mdi:induction"
+  - platform: template
+    name: "Heater Mode"
+    id: Mode_Burner
+
+binary_sensor:
+  - platform: template
+    name: "Heater Status"
+    id: stato_Bruciatore
+
 # Sensors for status reporting
 sensor:
-  - platform: template
-    name: "Burner Mode"
-    id: Mode_Burner
-    accuracy_decimals: 0
+  - platform: uptime
+    name: Uptime Sensor
 
   - platform: template
-    name: "Codice Errore"
+    name: "Error Code"
     id: Error_Code
     accuracy_decimals: 0 
 
@@ -79,28 +91,17 @@ sensor:
     name: "Battery Voltage"
     id: battery_voltage
     unit_of_measurement: "V"
-    accuracy_decimals: 2
+    accuracy_decimals: 1
     device_class: voltage
     icon: "mdi:car-battery"
 
   - platform: template
-    name: "Sea Level"
+    name: "Altitude"
     unit_of_measurement: 'm'
     id: altitude
     device_class: distance
     accuracy_decimals: 0
     icon: "mdi:summit"
-
-  - platform: template
-    name: "Burner Status"
-    id: stato_Bruciatore
-    accuracy_decimals: 0
-
-  - platform: template
-    name: "Glow Plug Status"
-    id: stato_Candeletta
-    accuracy_decimals: 0
-    icon: "mdi:induction"
 
   - platform: template
     name: "Power Status"
@@ -118,16 +119,15 @@ sensor:
     name: "Room Temperature"
     id: room_temperature
     unit_of_measurement: "°C"
-    accuracy_decimals: 1
+    accuracy_decimals: 0
     icon: "mdi:home-thermometer"
 
   - platform: template
     name: "Heating Temperature"
     id: heating_temperature
     unit_of_measurement: "°C"
-    accuracy_decimals: 1
+    accuracy_decimals: 0
     icon: "mdi:radiator"
-
 
   - platform: ble_client
     type: characteristic
@@ -135,32 +135,40 @@ sensor:
     ble_client_id: heater_ble
     service_uuid: "0000ffe0-0000-1000-8000-00805f9b34fb"
     characteristic_uuid: "0000ffe1-0000-1000-8000-00805f9b34fb"
-    name: "DUMP Dati BLE"
+    name: "BLE Raw Data"
     notify: true
     lambda: |-
+      
+      static const char* const states[] = {"Warmup", "Self test running", "Ignition", "Heating", "Shutting down"};
 
       if (x[0] == 170) {
-              ESP_LOGD("BLE", "Received data: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X ",
-                        x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], x[12], x[13], x[14], x[15], x[16], x[17], x[18], x[19]);
+        ESP_LOGD("BLE", "Received data: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X ",
+                  x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], x[12], x[13], x[14], x[15], x[16], x[17], x[18], x[19]);
 
-              id(heating_temperature).publish_state(x[13]);
-              id(Mode_Burner).publish_state(x[8]);
-              id(stato_Bruciatore).publish_state(x[3] > 0);
-              id(stato_Candeletta).publish_state(x[5]);
-              id(stato_Potenza).publish_state(x[9]);
-              id(Error_Code).publish_state(x[17]);
-              id(altitude).publish_state(x[6]);
-              id(room_temperature).publish_state(x[15]);
-              id(battery_voltage).publish_state(x[11]/10.0);
+        id(heating_temperature).publish_state((int16_t)(((uint8_t)x[14])<<8)|((uint8_t)x[13]));
+        id(Mode_Burner).publish_state(x[8] == 2 ? "Automatic" : "Level");
+        id(stato_Bruciatore).publish_state(x[3] > 0);
+        
+        // Set States
+        if (x[5] < sizeof(states)/sizeof(states[0])) {
+          id(stato_Candeletta).publish_state(states[x[5]]);
+        } else {
+          ESP_LOGD("Error", "Received state does not match known possible states: %02d", x[5]);
+        }
+        
+        id(stato_Potenza).publish_state(x[9]);
+        id(Error_Code).publish_state(x[17]);
+        id(altitude).publish_state(((x[7])<<8)|x[6]);
+        id(room_temperature).publish_state((int16_t)(((uint8_t)x[16])<<8)|((uint8_t)x[15]));
+        id(battery_voltage).publish_state((((x[12])<<8)|x[11])/10.0);
 
-              // Aggiunta della condizione per azzerare fan_speed
-              if (id(stato_Candeletta).state == 0 && id(stato_Bruciatore).state == 0) {
-                id(fan_speed).publish_state(0);
-              }
-              else
-               id(fan_speed).publish_state(x[10]+1);
-            }
-        return 0.0;
+        if (id(stato_Candeletta).state == "Warmup" && id(stato_Bruciatore).state == 0) {
+          id(fan_speed).publish_state(0);
+        } else {
+          id(fan_speed).publish_state(x[10]+1);
+        }
+      }
+      return 0;
         
 # Switches
 switch:
@@ -179,7 +187,7 @@ switch:
       - ble_client.ble_write:
           service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
           characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
-          value: [0xAA, 0x55, 0x0C, 0x22, 0x03, 0x00, 0x00, 0x31] #OFF
+          value: [0xAA, 0x55, 0x0C, 0x22, 0x03, 0x00, 0x00, 0x31] #OFF                          
       - lambda: |-
           id(fan_speed).publish_state(0);
     
@@ -214,7 +222,6 @@ select:
                   characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
                   value: [0xAA, 0x55, 0x0C, 0x22, 0x02, 0x02, 0x00, 0x32]
 
-
 number:
   - platform: template
     name: "Heater Temperature"
@@ -227,15 +234,13 @@ number:
     optimistic: true
     set_action:
       then:
-
+        # Set Automatic mode
         - ble_client.ble_write:
              service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
              characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
              value: [0xAA, 0x55, 0x0C, 0x22, 0x02, 0x02, 0x00, 0x32]
-
         - delay: 1s
-
-        # Invio dinamico del secondo comando BLE
+        # Send Temp       
         - ble_client.ble_write:
             service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
             characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
@@ -243,7 +248,6 @@ number:
               uint8_t temp = (uint8_t)id(heater_temperature).state;  // Set Temp
               uint8_t checksum = (0xAA + 0x55 + 0x0C + 0x22 + 0x04 + temp + 0x00) +1 % 256 ; // Calc checksum
               return {0xAA, 0x55, 0x0C, 0x22, 0x04, temp, 0x00, checksum};
-
 
   - platform: template
     name: "Heater LEVEL"
@@ -261,9 +265,7 @@ number:
             service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
             characteristic_uuid: '0000FFE1-0000-1000-8000-00805F9B34FB'
             value: [0xAA, 0x55, 0x0C, 0x22, 0x02, 0x01, 0x00, 0x31]
-
         - delay: 1s
-
         # Send Level
         - ble_client.ble_write:
             service_uuid: '0000FFE0-0000-1000-8000-00805F9B34FB'
@@ -272,5 +274,4 @@ number:
               uint8_t level = (uint8_t)id(heater_level).state;  // Set Level
               uint8_t checksum = (0xAA + 0x55 + 0x0C + 0x22 + 0x04 + level + 0x00) +1 % 256 ; // Calc checksum
               return {0xAA, 0x55, 0x0C, 0x22, 0x04, level, 0x00, checksum};
-
 

@@ -33,7 +33,7 @@ ota:
 # if you use home assistant and have frequent disconnections. disable the web_server
 web_server:
   port: 80
-  version: 1
+  version: 3
 
 wifi:
   ssid: !secret wifi_ssid
@@ -157,6 +157,14 @@ sensor:
         }
         
         id(stato_Potenza).publish_state(x[9]);
+        
+        // Sync heater_level if different
+        if (id(heater_level).state != x[9]) {
+        auto call = id(heater_level).make_call();
+        call.set_value(x[9]);
+        call.perform();
+        }     
+        
         id(Error_Code).publish_state(x[17]);
         id(altitude).publish_state(((x[7])<<8)|x[6]);
         id(room_temperature).publish_state((int16_t)(((uint8_t)x[16])<<8)|((uint8_t)x[15]));
